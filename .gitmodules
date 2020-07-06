@@ -1,6 +1,6 @@
 [submodule "donkeycar"]
 	path = donkeycar
-	url = https://github.com/autorope/donkeycar.git
+	url = https://github.com/autopowerracing/donkeycar.git
 [submodule "gym-donkeycar"]
 	path = gym-donkeycar
-	url = https://github.com/tawnkramer/gym-donkeycar
+	url = https://github.com/autopowerracing/gym-donkeycar.git
