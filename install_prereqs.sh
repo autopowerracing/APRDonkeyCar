@@ -22,72 +22,13 @@ is_linux() {
   test -n "${linux}"
 }
 
-install_donkeycar() {
-  # confirm that you are at the root directory
-  echo "Activating base enviroment."
-  conda activate
-
-  if conda env list | grep -q donkey; then
-    echo "Found Existing donkey enviroment. Updating...."
-    conda update -n base -c defaults conda -y
-    conda env remove -n donkey
-  fi
-
+install_prerequisites() {
   if is_mac; then
-    conda env create -f ./donkeycar/install/envs/mac.yml
+    install_mac_prereqs    
   elif is_linux; then
-    conda env create -f ./donkeycar/install/envs/ubuntu.yml
+    install_linux_prereqs
   fi
-
-  echo "Activating donkey enviroment."
-  conda activate donkey
-  pip install -e donkeycar/[pc]
-}
-
-install_gymdonkeycar() {
-  pip install -e gym-donkeycar/
-}
-
-create_donkeycar_app() {
-  conda activate donkey
-  if [ ! -d "./mycar" ]; then 
-    donkey createcar --path mycar
-  else
-    echo "You already have the default donkeycar app"
-  fi
-}
-
-download_simulation() {
-  if [ ! -d "./Simulator-Binaries" ]; then
-    echo "Downloading latest Simulator Binary"
-    mkdir ./Simulator-Binaries
-
-    if is_mac; then
-      system="Mac"
-    elif is_linux; then
-      system="Linux"
-    fi
-
-    # system="Mac"
-    echo "On $system"
-
-    # getting url of binary
-    downloadUrl=$(curl -s "https://api.github.com/repos/tawnkramer/gym-donkeycar/releases/latest" \
-    | grep "browser_download_url.*$system*.zip" \
-    | cut -d '"' -f 4)
-    
-    # binaryUrl=$(echo $downloadUrls | grep -i $system | cut -d '"' -f 4)
-    echo "Downloading binary from $downloadUrl"
-    wget $downloadUrl -P ./Simulator-Binaries/ --quiet --show-progress
-    
-    # unzip and delete zip folder
-    zipName=$(ls ./Simulator-Binaries/*.zip)
-    pwd
-    unzip $zipName -d ./Simulator-Binaries
-    rm $zipName
-  else 
-    echo "You already have a binary"
-  fi
+  bs_success_message "Installed!"
 }
 
 check_executables() {
@@ -95,11 +36,50 @@ check_executables() {
   missing=""
   for package in $packages; do
     if [[ -z $(which $package) ]]; then
-      # bs_error_message "$package not installed"
       missing="$missing $package"
     fi
   done
   echo $missing
+}
+
+install_mac_prereqs() {
+  packages="$(check_executables "git curl brew wget conda")"
+  if [[ -n $packages ]]; then
+      bs_error_message "will be installing the missing dependencies: $missing"
+      for package in $packages; do
+        echo "Downloading: $package"
+        if [[ $package == "git" ]]; then
+          git
+        elif [[ $package == "brew" ]]; then
+          /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install.sh)"
+        elif [[ $package == "wget" ]]; then
+          brew install "wget"
+        elif [[ $package == "conda" ]]; then
+          wget https://repo.anaconda.com/miniconda/Miniconda3-latest-MacOSX-x86_64.sh -O ~/miniconda.sh
+          bash ~/miniconda.sh -b -p $HOME/miniconda3
+          ln -s $HOME/miniconda3/bin/conda /usr/local/bin
+        fi
+      done
+    conda init  # needed before restarting terminal
+  fi
+}
+
+install_linux_prereqs() {
+  packages="$(check_executables "git wget conda")"
+  if [[ -n $packages ]]; then
+      bs_error_message "will be installing the missing dependencies: $missing"
+      for package in $packages; do
+        echo "Downloading: $package"
+        if [[ $package == "git" ]]; then
+          sudo apt-get install git-all
+        elif [[ $package == "wget" ]]; then
+          sudo apt-get install "wget"
+        elif [[ $package == "conda" ]]; then
+          wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O ~/miniconda.sh          
+          bash ~/miniconda.sh -b -p $HOME/miniconda3
+        fi
+      done
+  fi
 }
 
 __bs_print_bare_title() {
@@ -200,36 +180,8 @@ bs_error_message() {
 
 main() {
 
-  __bs_print_title 1 4 "Installing DonkeyCar"
-  if __bs_run_func_with_margin install_donkeycar; then
-    __bs_print_bare_footer
-  else
-    __bs_print_fail_footer
-  fi
-
-  __bs_print_title 2 4 "Installing GYM Donkeycar"
-  if __bs_run_func_with_margin install_gymdonkeycar; then
-    __bs_print_bare_footer
-  else
-    __bs_print_fail_footer
-  fi
-
-  __bs_print_title 3 4 "Creating Initial Donkey Car Application"
-  if __bs_run_func_with_margin install_gymdonkeycar; then
-    __bs_print_bare_footer
-  else
-    __bs_print_fail_footer
-  fi
-
-  __bs_print_title 4 5 "Downloading Simulator Binaries"
-  if __bs_run_func_with_margin download_simulation; then
-    __bs_print_bare_footer
-  else
-    __bs_print_fail_footer
-  fi
-
-  __bs_print_title 5 5 "Creating First App"
-  if __bs_run_func_with_margin create_donkeycar_app; then
+  __bs_print_title 1 1 "Installing Prerequisites"
+  if __bs_run_func_with_margin install_prerequisites; then
     __bs_print_bare_footer
   else
     __bs_print_fail_footer
