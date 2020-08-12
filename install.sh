@@ -41,10 +41,12 @@ install_donkeycar() {
 
   echo "Activating donkey enviroment."
   conda activate donkey
-  pip install -e donkeycar/[pc]
+  pip install -e donkeycar/
 }
 
 install_gymdonkeycar() {
+  echo "Activating gym donkey enviroment"
+  conda activate donkey
   pip install -e gym-donkeycar/
 }
 
@@ -71,8 +73,13 @@ download_simulation() {
     # system="Mac"
     echo "On $system"
 
+    # ids of releases
+    # August  29014167
+    # May     26596667
+    release_id=26596667
+
     # getting url of binary
-    downloadUrl=$(curl -s "https://api.github.com/repos/tawnkramer/gym-donkeycar/releases/latest" \
+    downloadUrl=$(curl -s "https://api.github.com/repos/tawnkramer/gym-donkeycar/releases/$release_id" \
     | grep "browser_download_url.*$system*.zip" \
     | cut -d '"' -f 4)
     
@@ -214,21 +221,14 @@ main() {
     __bs_print_fail_footer
   fi
 
-  __bs_print_title 3 4 "Creating Initial Donkey Car Application"
-  if __bs_run_func_with_margin install_gymdonkeycar; then
-    __bs_print_bare_footer
-  else
-    __bs_print_fail_footer
-  fi
-
-  __bs_print_title 4 5 "Downloading Simulator Binaries"
+  __bs_print_title 3 4 "Downloading Simulator Binaries"
   if __bs_run_func_with_margin download_simulation; then
     __bs_print_bare_footer
   else
     __bs_print_fail_footer
   fi
 
-  __bs_print_title 5 5 "Creating First App"
+  __bs_print_title 4 4 "Creating First App"
   if __bs_run_func_with_margin create_donkeycar_app; then
     __bs_print_bare_footer
   else
